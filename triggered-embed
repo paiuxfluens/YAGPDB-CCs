@@ -1,4 +1,6 @@
-{{/* CREATE EMBED - TRIGGERED BY MEMBERS AND/OR MODS */}}
+{{/* TRIGGERED EMBED */}}
+{{/* Create an embed that can be triggered by mods and/or members. Cooldown applies for everyone except mods as defined by mod roles. For mod-only commands just create a mod-only CC group and set allowed roles. */}}
+
 {{/* COPYRIGHT UNDER MIT LICENSE (C) 2022 PAIUXFLUENS#0008*/}}
 {{/* Portions of this code referenced/used snippets from https://docs.yagpdb.xyz/reference/custom-command-examples */}}
 {{/* Please see https://github.com/paiuxfluens/YAGPDB-CCs/blob/main/README.md for my disclaimers. ;-; */}}
