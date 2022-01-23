@@ -1,0 +1,69 @@
+{{/* CREATE EMBED - TRIGGERED BY MEMBERS AND/OR MODS */}}
+{{/* COPYRIGHT UNDER MIT LICENSE (C) 2022 PAIUXFLUENS#0008*/}}
+{{/* Portions of this code referenced/used snippets from https://docs.yagpdb.xyz/reference/custom-command-examples */}}
+{{/* Please see https://github.com/paiuxfluens/YAGPDB-CCs/blob/main/README.md for my disclaimers. ;-; */}}
+
+{{/* Trigger type: Exact Match | Trigger text "!text" */}}
+{{/* If you want to add aliases, you can make the trigger type regex */}}
+{{/* \A(!)(text1|alias)\b */}}
+
+{{/* CONFIGURABLE VALUES */}}
+{{/* MOD ROLES - add all role IDs */}}
+	{{ $modRoles := cslice 773651564594331648 789965643582537738}}
+{{/* Trigger for exact match */}}
+	{{ $tr := "!text" }}
+{{/* Cooldown variables */}}
+	{{/* 0 for per user, 1 for global */}}
+	{{$isGlobal := 1}}
+	{{/* name your cooldown (anything works) */}}
+	{{$name := "CHILL COOLDOWN"}}
+{{/* Length of the cooldown (in seconds) */}}
+	{{$lengthSec := 60}}
+
+{{/* EMBED - COMPLEX EMBED */}}
+	{{ $embed := cembed 
+	"title" "Title Text"
+	"description" "Desrcription Text"
+	"color" 9236968
+	"footer" 
+		(sdict 
+			"text" "Footer Text"
+	)}}
+
+{{/* END OF CONFIGURABLE VALUES */}}
+
+{{/* CREATING VARIABLES - NO TOUCHIE */}}
+	{{$id := 0}}
+	{{$cd := dbGet (toInt64 $id) "cooldown"}}
+	{{$key := joinStr "" "cooldown_" $name}}
+	{{if eq $isGlobal 0}}
+	{{$id = .User.ID}}
+	{{end}}
+
+{{/* CHECK IF TRIGGERING USER IS MOD */}}
+	{{ $isMod := false }}
+		{{ range .Member.Roles }}
+		{{- if in $modRoles . }}
+			{{- $isMod = true }}
+		{{- end -}}
+	{{end}}
+
+	{{/* IGNORE COOLDOWN IF MOD */}}
+	{{ if $isMod }}
+		{{ sendMessage nil $embed }}
+		{{ deleteTrigger 0 }}
+
+	{{ else }}
+
+	{{/* APPLY COOLDOWN IF NOT MOD */}}
+		{{if dbGet (toInt64 $id) $key}} 
+
+			{{/* IF COOLDOWN ACTIVE*/}}
+			{{ sendMessage nil (print "Sorry, we just used that! Look for an embed from me above. The `" $tr "` command has a cooldown of" $lengthSec " seconds!") }}
+		{{else}}
+			{{/* CREATE COOLDOWN ENTRY */}}
+			{{dbSetExpire (toInt64 $id) $key "cooldown" $lengthSec}}
+			{{ deleteTrigger 0 }}
+			{{ sendMessage nil $embed }}
+		{{end}}
+	{{ end }}
