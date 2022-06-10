@@ -1,0 +1,95 @@
+{{/* REPORT - Made By: RyTheFirst#0001 Updated: Sniff Mod Team, paiuxfluens#0008*/}}
+{{/* This command uses snippets of code taken from https://github.com/yagpdb-cc/yagpdb-cc/blob/master/util/flagMessage.go.tmpl */}}
+
+{{/* Set Trigger to "Added Reaction Only" */}}
+{{/* Don't forget to change the values to your own server's values! */}}
+ 
+{{/* START CONFIGURATIONS */}}
+ 
+{{/* REPORT SETTINGS */}}
+
+{{/* Channel to send reports into */}}
+{{$ChannelID := }}
+{{/* Reaction ID to send reports when used */}}
+{{$EmoteID := }}
+{{/* Role to ping in the report message */}}
+{{$PingRoleID := }}
+
+ 
+{{/* COOLDOWN SETTINGS */}}
+{{/* Length of the cooldown (in seconds) */}}
+{{$lengthSec := 5}}
+{{/* 0 for a per user cooldown, 1 for a global cooldown*/}}
+{{$isGlobal := 0}}
+ 
+{{/* END CONFIGURATIONS */}}
+ 
+{{/* CREATING VARIABLES DO NOT TOUCH */}}
+	{{$name := "ReportReactCooldown"}}
+	{{$id := 0}}
+	{{$key := joinStr "" "cooldown_" $name}}
+	{{if eq $isGlobal 0}}
+	{{$id = .User.ID}}
+{{end}}
+ 
+{{/* ACTUAL CODE... */}}
+ 
+{{/* If the reaction emoji's ID matches the one we want... */}}
+{{ if and (eq .Reaction.Emoji.ID $EmoteID) (not .User.Bot ) }}
+ 
+{{/* If the cooldown is active... */}}
+{{if dbGet (toInt64 $id) $key}} 
+{{ sendDM (joinStr "" "Failed to Report, please try again in " $lengthSec " seconds!") }}
+ 
+{{/* Otherwise... */}}
+{{else}}
+ 
+{{/* If the message has already been reported */}}
+{{if (dbGet (.Message.ID) "reported").Value}}
+ 
+{{/* DM the user telling them the message has already been reported. */}}
+{{ sendDM "Thanks, but someone has already reported that message!" }}
+ 
+{{/* Otherwise */}}
+{{else}}
+ 
+{{/* Add an entry for the cooldown to the DB */}}
+{{dbSetExpire (toInt64 $id) $key "cooldown" $lengthSec}}
+ 
+{{/* Get the attachment, if there is one */}}
+{{ $attachment := "" }}
+		{{ with .ReactionMessage.Attachments }} {{ $attachment = (index . 0).ProxyURL }} {{ end }}
+ 
+{{ sendMessageNoEscape $ChannelID (joinStr "" "<@&" $PingRoleID ">") }} 
+{{ sendMessageNoEscape $ChannelID (cembed
+	"title" (joinStr "" "Message report from #" .Channel.Name)
+	"color" 16711710
+	"image" (sdict "url" $attachment)
+	"fields" (cslice
+		(sdict "name" "❯ Channel:" "value" .channel.Mention "inline" true)
+		(sdict "name" "❯ Reported by" "value" .User.Mention "inline" true)
+		(sdict "name" "❯ Message Author" "value" .ReactionMessage.Author.Mention "inline" true)
+		(sdict "name" "Message:" "value" (printf .Message.Content))
+		(sdict "name" "❯ Direct Link:" "value" (printf "[Jump to](https://discordapp.com/channels/%d/%d/%d)" .Guild.ID .Channel.ID .ReactionMessage.ID) "inline" true)
+		(sdict "name" "❯ All logs" "value" (printf "[View here](%s)" (execAdmin "log")) "inline" true)
+	)
+	
+	"footer" (sdict "text" "Reported at")
+	"timestamp" currentTime
+) }}
+ {{ sendMessageNoEscape $ChannelID (printf "Author (offender) ID for mobile mods:") }}
+ {{ sendMessageNoEscape $ChannelID (joinStr "" .ReactionMessage.Author.ID) }}
+
+
+{{/* DM the user reporting, letting them know that the report has been received */}}
+{{ sendDM "Thank you for your report! The staff team will look into the message ASAP!" }}
+ 
+{{/* Add a DB entry to say the message has been reported */}}
+{{dbSet .Message.ID "reported" "0"}}
+ 
+{{/* Finish Up */}}
+{{ end }}
+{{ end }}
+{{/* Yeet The Reaction */}}
+{{ deleteMessageReaction nil .ReactionMessage.ID .User.ID (printf "%s:%d" .Reaction.Emoji.Name $EmoteID) }}
+{{ end }}
