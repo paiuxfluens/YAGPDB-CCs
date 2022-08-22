@@ -1,0 +1,39 @@
+{{/* GREYLIST TRIGGER */}}
+
+{{/* Use with Greylist Embedded Response */}}
+{{/* Flag messages containing certain words for moderator attention. */}}
+
+{{/* COPYRIGHT UNDER MIT LICENSE (C) 2022 PAIUXFLUENS#0008*/}}
+
+{{/* Portions of this code referenced/used snippets from https://docs.yagpdb.xyz/reference/custom-command-examples */}}
+{{/* Please see https://github.com/paiuxfluens/YAGPDB-CCs/blob/main/README.md for my disclaimers. ;-; */}}
+
+{{/* ----------------------------------------------- */}}
+
+{{/* Trigger type: Exact Match | Trigger text "(?i)text1|text2" */}}
+{{/* Trigger should be set to NOT Case Sensitive */}}
+
+{{/* CONFIGURABLE VALUES */}} 
+
+{{/* Channel to send greylist report to */}}
+	{{$ChannelID := #}}
+
+{{/* Trigger description for context */}}
+	{{ $context := "(questionable content)" }}
+
+{{/* CC # of "Greylist Embedded Response" */}}
+	{{ $CC := # }}
+
+{{/* Role to ping in the report message */}}
+{{$PingRoleID := #}}
+
+{{/* END OF CONFIGURABLE VALUES */}}
+
+
+{{/* Get the attachment, if there is one */}}
+{{ $attachment := "" }}
+		{{ with .Message.Attachments }} {{ $attachment = (index . 0).ProxyURL }} {{ end }}
+
+{{/* Send message with triggering word and category, execute Greylist Embedded Response */}}
+{{ sendMessageNoEscape $ChannelID (print "**" (reFindAll .CCTrigger .Message.Content) "** This may need your attention: " $context " <@&" $PingRoleID ">") }}
+{{ execCC $CC nil 0 .ExecData.Message.Content }}
