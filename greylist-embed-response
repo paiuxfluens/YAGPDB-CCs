@@ -1,0 +1,36 @@
+{{/* GREYLIST EMBEDDED RESPONSE */}}
+
+{{/* Use with Greylist Trigger */}}
+{{/* Flag messages containing certain words for moderator attention. */}}
+
+{{/* COPYRIGHT UNDER MIT LICENSE (C) 2022 PAIUXFLUENS#0008*/}}
+
+{{/* Portions of this code referenced/used snippets from https://docs.yagpdb.xyz/reference/custom-command-examples */}}
+{{/* Please see https://github.com/paiuxfluens/YAGPDB-CCs/blob/main/README.md for my disclaimers. ;-; */}}
+
+{{/* TRIGGER TYPE: None */}}
+
+{{/* CONFIGURABLE VALUES */}} 
+
+{{/* Channel to send greylist hits to  */}}
+{{$ChannelID :=967844108536279120}}
+
+{{/* YAGPDB embeds use decimal values for colors; convert Hex to Dec here: https://www.checkyourmath.com/convert/color/hexadecimal_decimal.php */}}
+{{$color := 13369344}}
+
+{{/* END OF CONFIGURABLE VALUES */}}
+
+{{ sendMessageNoEscape $ChannelID (cembed
+	"color" $color
+	"fields" (cslice
+		(sdict "name" "❯ Channel:" "value" .channel.Mention "inline" true)
+		(sdict "name" "❯ Message Author" "value" .Message.Author.Mention "inline" true)
+		(sdict "name" "Message:" "value" (printf .Message.Content))
+		(sdict "name" "❯ Direct Link:" "value" (printf "[Jump to](https://discordapp.com/channels/%d/%d/%d)" .Guild.ID .Channel.ID .Message.ID) "inline" true)
+	)
+	
+	"footer" (sdict "text" "Message sent at")
+	"timestamp" currentTime
+) }}
+ {{ sendMessageNoEscape $ChannelID (printf "Offender ID for mobile mods:") }}
+ {{ sendMessageNoEscape $ChannelID (joinStr "" .Message.Author.ID) }}
