@@ -32,10 +32,11 @@
 	{{$id = .User.ID}}
 {{end}}
  
-{{/* ACTUAL CODE... */}}
+{{/* Actual Code... */}}
  
 {{/* If the reaction emoji's ID matches the one we want... */}}
 {{ if and (eq .Reaction.Emoji.ID $EmoteID) (not .User.Bot ) }}
+ 
  
 {{/* If the cooldown is active... */}}
 {{if dbGet (toInt64 $id) $key}} 
@@ -49,7 +50,7 @@
  
 {{/* DM the user telling them the message has already been reported. */}}
 {{ sendDM "Thanks, but someone has already reported that message!" }}
- 
+
 {{/* Otherwise */}}
 {{else}}
  
@@ -57,19 +58,20 @@
 {{dbSetExpire (toInt64 $id) $key "cooldown" $lengthSec}}
  
 {{/* Get the attachment, if there is one */}}
-{{ $attachment := "" }}
+		{{ $attachment := "" }}
 		{{ with .ReactionMessage.Attachments }} {{ $attachment = (index . 0).ProxyURL }} {{ end }}
  
 {{ sendMessageNoEscape $ChannelID (joinStr "" "<@&" $PingRoleID ">") }} 
 {{ sendMessageNoEscape $ChannelID (cembed
 	"title" (joinStr "" "Message report from #" .Channel.Name)
 	"color" 16711710
+
 	"image" (sdict "url" $attachment)
 	"fields" (cslice
 		(sdict "name" "❯ Channel:" "value" .channel.Mention "inline" true)
 		(sdict "name" "❯ Reported by" "value" .User.Mention "inline" true)
 		(sdict "name" "❯ Message Author" "value" .ReactionMessage.Author.Mention "inline" true)
-		(sdict "name" "Message:" "value" (printf .Message.Content))
+		(sdict "name" "Message:" "value" (or .ReactionMessage.Content "*No message text - see attachment*"))
 		(sdict "name" "❯ Direct Link:" "value" (printf "[Jump to](https://discordapp.com/channels/%d/%d/%d)" .Guild.ID .Channel.ID .ReactionMessage.ID) "inline" true)
 		(sdict "name" "❯ All logs" "value" (printf "[View here](%s)" (execAdmin "log")) "inline" true)
 	)
